@@ -1,0 +1,114 @@
+import { store } from './store.js';
+import { runShuffle } from './shuffle.js';
+import { playSlotAnimation } from './animation.js';
+import { exportSeatChartImage } from './imageExport.js';
+import { getDeskSizePct } from './deskGrid.js';
+
+let currentAssignment = null; // deskId -> studentId
+let currentSeatsSnapshot = null;
+let isAnimating = false;
+let isFlipped = false;
+
+export function initProjection({ stageEl, shuffleBtn, saveImageBtn, flipBtn, errorEl }) {
+  renderStage(stageEl);
+  saveImageBtn.disabled = true;
+
+  shuffleBtn.addEventListener('click', () => {
+    if (isAnimating) return;
+    hideError(errorEl);
+
+    const state = store.getState();
+    const result = runShuffle({
+      roster: state.roster,
+      desks: state.layout.desks,
+      conditions: state.conditions
+    });
+
+    if (!result.ok) {
+      showError(errorEl, result.message);
+      return;
+    }
+
+    currentAssignment = result.assignment;
+    isAnimating = true;
+    shuffleBtn.disabled = true;
+    saveImageBtn.disabled = true;
+
+    const reels = renderStage(stageEl, state.layout.desks);
+    const nameById = new Map(state.roster.map((s) => [s.id, s.name]));
+    const reelData = reels.map((reel) => ({
+      deskEl: reel.el,
+      finalName: nameById.get(currentAssignment[reel.desk.id]) || ''
+    }));
+    const namePool = state.roster.map((s) => s.name);
+
+    playSlotAnimation(reelData, namePool, () => {
+      isAnimating = false;
+      shuffleBtn.disabled = false;
+      saveImageBtn.disabled = false;
+
+      currentSeatsSnapshot = state.layout.desks.map((desk) => ({
+        xPct: desk.xPct,
+        yPct: desk.yPct,
+        frontZone: !!desk.frontZone,
+        studentName: nameById.get(currentAssignment[desk.id]) || ''
+      }));
+      store.addHistoryEntry({ timestamp: Date.now(), seats: currentSeatsSnapshot });
+    });
+  });
+
+  saveImageBtn.addEventListener('click', () => {
+    if (!currentSeatsSnapshot) return;
+    exportSeatChartImage(currentSeatsSnapshot, '座席表', { flipped: isFlipped, showFrontZone: false });
+  });
+
+  flipBtn.addEventListener('click', () => {
+    if (isAnimating) return;
+    isFlipped = !isFlipped;
+    renderStage(stageEl);
+  });
+}
+
+export function refreshProjectionStage(stageEl) {
+  currentAssignment = null;
+  currentSeatsSnapshot = null;
+  renderStage(stageEl);
+}
+
+/**
+ * 座席を描画する。すでに抽選済みの場合は現在の割り当てを反映し、
+ * 未抽選の場合は空の机を並べる。上下反転設定も反映する。
+ */
+function renderStage(stageEl, desksOverride) {
+  const state = store.getState();
+  const desks = desksOverride || state.layout.desks;
+  const nameById = currentAssignment ? new Map(state.roster.map((s) => [s.id, s.name])) : null;
+
+  stageEl.innerHTML = '';
+  const stage = document.createElement('div');
+  stage.className = 'seat-chart-stage';
+  stageEl.appendChild(stage);
+
+  const { wPct, hPct } = getDeskSizePct(desks.length);
+
+  return desks.map((desk) => {
+    const el = document.createElement('div');
+    el.className = 'desk desk-display';
+    el.style.left = `${desk.xPct}%`;
+    el.style.top = `${isFlipped ? 100 - desk.yPct - hPct : desk.yPct}%`;
+    el.style.width = `${wPct}%`;
+    el.style.height = `${hPct}%`;
+    el.textContent = nameById ? nameById.get(currentAssignment[desk.id]) || '' : '';
+    stage.appendChild(el);
+    return { desk, el };
+  });
+}
+
+function showError(errorEl, message) {
+  errorEl.textContent = message;
+  errorEl.classList.remove('hidden');
+}
+
+function hideError(errorEl) {
+  errorEl.classList.add('hidden');
+}
