@@ -34,12 +34,13 @@ export function initProjection({ stageEl, shuffleBtn, saveImageBtn, flipBtn, err
       return;
     }
 
-    currentAssignment = result.assignment;
     isAnimating = true;
     shuffleBtn.disabled = true;
     saveImageBtn.disabled = true;
 
-    const reels = renderStage(stageEl, state.layout.desks);
+    // アニメーション開始前は必ず空欄で描画する(先に正解が見えてしまわないように)
+    const reels = renderStage(stageEl, state.layout.desks, { forceBlank: true });
+    currentAssignment = result.assignment;
     const nameById = new Map(state.roster.map((s) => [s.id, s.name]));
     const reelData = reels.map((reel) => ({
       deskEl: reel.el,
@@ -93,10 +94,10 @@ function updateFlipButtonLabel() {
  * 座席を描画する。すでに抽選済みの場合は現在の割り当てを反映し、
  * 未抽選の場合は空の机を並べる。生徒側表示のときは上下左右とも反転する。
  */
-function renderStage(stageEl, desksOverride) {
+function renderStage(stageEl, desksOverride, { forceBlank = false } = {}) {
   const state = store.getState();
   const desks = desksOverride || state.layout.desks;
-  const nameById = currentAssignment ? new Map(state.roster.map((s) => [s.id, s.name])) : null;
+  const nameById = !forceBlank && currentAssignment ? new Map(state.roster.map((s) => [s.id, s.name])) : null;
   const rotate180 = viewMode === 'student';
 
   stageEl.innerHTML = '';
