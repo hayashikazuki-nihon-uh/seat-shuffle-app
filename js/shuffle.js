@@ -1,5 +1,7 @@
-const MAX_ATTEMPTS = 400;
-const ADJACENCY_FACTOR = 1.4;
+import { getDeskSizePct } from './deskGrid.js';
+
+const MAX_ATTEMPTS = 800;
+const ADJACENCY_FACTOR = 1.8;
 
 function shuffleArray(arr) {
   const a = arr.slice();
@@ -16,24 +18,15 @@ function distance(a, b) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function median(nums) {
-  if (nums.length === 0) return 0;
-  const sorted = nums.slice().sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-}
-
-/** 机同士の「隣接」関係を、机の配置密度から自動的に判定する */
+/**
+ * 机同士の「隣接」関係を判定する。
+ * 実際に画面上で表示される机の大きさを基準にすることで、
+ * 机の間隔が均一でないレイアウト(手動で自由に配置した場合など)でも
+ * 「隣接」の判定がずれないようにしている。
+ */
 function buildAdjacency(desks) {
-  const nearestDist = desks.map((d) => {
-    let min = Infinity;
-    for (const other of desks) {
-      if (other.id === d.id) continue;
-      min = Math.min(min, distance(d, other));
-    }
-    return min === Infinity ? 0 : min;
-  });
-  const threshold = median(nearestDist) * ADJACENCY_FACTOR;
+  const { wPct, hPct } = getDeskSizePct(desks.length);
+  const threshold = Math.max(wPct, hPct) * ADJACENCY_FACTOR;
   const adjacency = new Map(desks.map((d) => [d.id, new Set()]));
   for (let i = 0; i < desks.length; i++) {
     for (let j = i + 1; j < desks.length; j++) {

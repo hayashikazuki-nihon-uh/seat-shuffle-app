@@ -4,6 +4,9 @@ import { renderLayout } from './layout.js';
 import { renderConditions } from './conditions.js';
 import { renderHistory } from './history.js';
 import { initProjection, refreshProjectionStage } from './projection.js';
+import { showToast } from './toast.js';
+
+const UPDATE_CHECK_INTERVAL_MS = 60000;
 
 const TAB_RENDERERS = {
   roster: renderRoster,
@@ -67,9 +70,50 @@ function setupModeSwitch() {
 }
 
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch((e) => {
+  if (!('serviceWorker' in navigator)) return;
+
+  // すでに古いバージョンに制御されているページ(=再訪問)かどうかを覚えておく。
+  // 新規インストール直後の初回切り替えでは再読み込みしない。
+  const hadController = !!navigator.serviceWorker.controller;
+  let lastCheckAt = 0;
+
+  navigator.serviceWorker
+    .register('./service-worker.js')
+    .then((registration) => {
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showToast('新しいバージョンが見つかったので更新します。しばらくお待ちください…', {
+              persistent: true
+            });
+          }
+        });
+      });
+
+      const checkForUpdate = () => {
+        const now = Date.now();
+        if (now - lastCheckAt < UPDATE_CHECK_INTERVAL_MS) return;
+        lastCheckAt = now;
+        showToast('更新を確認しています…');
+        registration.update().catch(() => {});
+      };
+
+      // アプリを開いた/再表示したタイミングで、新しいバージョンがないか確認する
+      checkForUpdate();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkForUpdate();
+      });
+    })
+    .catch((e) => {
       console.error('Service Worker registration failed', e);
+    });
+
+  if (hadController) {
+    // 新しいバージョンが有効化されたら、最新のコードを使うため自動的に再読み込みする
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
     });
   }
 }

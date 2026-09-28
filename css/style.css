@@ -45,6 +45,10 @@ input, textarea {
 
 body.mode-admin #admin-view {
   display: block;
+  /* コンテンツがビューポートより長くなっても、上部のヘッダーが正しく追従(sticky)できるよう、
+     高さを固定せずコンテンツに合わせて伸びるようにする */
+  height: auto;
+  min-height: 100%;
 }
 
 body.mode-projection #projection-view {

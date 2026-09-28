@@ -1,3 +1,5 @@
+import { showToast } from './toast.js';
+
 const CANVAS_W = 1600;
 const CANVAS_H = 1200;
 const DESK_W = 150;
@@ -72,18 +74,6 @@ function drawSeatChart(seats, title, rotate180, showFrontZone) {
   }
 
   return canvas;
-}
-
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.className = 'save-toast';
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 400);
-  }, 3200);
 }
 
 function downloadBlob(blob, filename) {
