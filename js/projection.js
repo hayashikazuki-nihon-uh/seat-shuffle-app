@@ -4,12 +4,17 @@ import { playSlotAnimation } from './animation.js';
 import { exportSeatChartImage } from './imageExport.js';
 import { getDeskSizePct } from './deskGrid.js';
 
+const VIEW_LABEL = { podium: '教卓側', student: '生徒側' };
+
 let currentAssignment = null; // deskId -> studentId
 let currentSeatsSnapshot = null;
 let isAnimating = false;
-let isFlipped = false;
+let viewMode = 'podium'; // 'podium' = 元のレイアウト通り, 'student' = 180度回転(生徒から見た向き)
+let flipBtnEl = null;
 
 export function initProjection({ stageEl, shuffleBtn, saveImageBtn, flipBtn, errorEl }) {
+  flipBtnEl = flipBtn;
+  updateFlipButtonLabel();
   renderStage(stageEl);
   saveImageBtn.disabled = true;
 
@@ -59,12 +64,16 @@ export function initProjection({ stageEl, shuffleBtn, saveImageBtn, flipBtn, err
 
   saveImageBtn.addEventListener('click', () => {
     if (!currentSeatsSnapshot) return;
-    exportSeatChartImage(currentSeatsSnapshot, '座席表', { flipped: isFlipped, showFrontZone: false });
+    exportSeatChartImage(currentSeatsSnapshot, '座席表', {
+      rotate180: viewMode === 'student',
+      showFrontZone: false
+    });
   });
 
   flipBtn.addEventListener('click', () => {
     if (isAnimating) return;
-    isFlipped = !isFlipped;
+    viewMode = viewMode === 'podium' ? 'student' : 'podium';
+    updateFlipButtonLabel();
     renderStage(stageEl);
   });
 }
@@ -75,14 +84,20 @@ export function refreshProjectionStage(stageEl) {
   renderStage(stageEl);
 }
 
+function updateFlipButtonLabel() {
+  if (!flipBtnEl) return;
+  flipBtnEl.textContent = `🔄 ${VIEW_LABEL[viewMode]}`;
+}
+
 /**
  * 座席を描画する。すでに抽選済みの場合は現在の割り当てを反映し、
- * 未抽選の場合は空の机を並べる。上下反転設定も反映する。
+ * 未抽選の場合は空の机を並べる。生徒側表示のときは上下左右とも反転する。
  */
 function renderStage(stageEl, desksOverride) {
   const state = store.getState();
   const desks = desksOverride || state.layout.desks;
   const nameById = currentAssignment ? new Map(state.roster.map((s) => [s.id, s.name])) : null;
+  const rotate180 = viewMode === 'student';
 
   stageEl.innerHTML = '';
   const stage = document.createElement('div');
@@ -94,8 +109,8 @@ function renderStage(stageEl, desksOverride) {
   return desks.map((desk) => {
     const el = document.createElement('div');
     el.className = 'desk desk-display';
-    el.style.left = `${desk.xPct}%`;
-    el.style.top = `${isFlipped ? 100 - desk.yPct - hPct : desk.yPct}%`;
+    el.style.left = `${rotate180 ? 100 - desk.xPct - wPct : desk.xPct}%`;
+    el.style.top = `${rotate180 ? 100 - desk.yPct - hPct : desk.yPct}%`;
     el.style.width = `${wPct}%`;
     el.style.height = `${hPct}%`;
     el.textContent = nameById ? nameById.get(currentAssignment[desk.id]) || '' : '';
