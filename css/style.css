@@ -60,13 +60,16 @@ body.mode-projection #projection-view {
   position: sticky;
   top: 0;
   z-index: 20;
+  /* ステータスバー(時刻・電池表示)と重ならないよう、セーフエリア分だけ下げる */
+  padding-top: env(safe-area-inset-top);
+  background: var(--color-card);
 }
 
 .admin-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 20px;
+  padding: 14px max(20px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
   background: var(--color-card);
   border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
@@ -114,7 +117,7 @@ body.mode-projection #projection-view {
 }
 
 main {
-  padding: 20px;
+  padding: 20px max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   max-width: 900px;
   margin: 0 auto;
 }
@@ -461,6 +464,7 @@ main {
 #projection-view {
   background: #0f1b30;
   position: relative;
+  padding-top: env(safe-area-inset-top);
 }
 
 .seat-chart-stage {
@@ -469,7 +473,7 @@ main {
 }
 
 #projection-view .seat-chart-stage {
-  width: min(96vw, 96vh * 4 / 3);
+  width: min(96vw, calc((96vh - env(safe-area-inset-top)) * 4 / 3));
   margin: 3vh auto;
 }
 
@@ -480,7 +484,7 @@ main {
 
 .projection-error {
   position: absolute;
-  top: 16px;
+  top: calc(16px + env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   background: #fff3cd;
@@ -493,8 +497,8 @@ main {
 
 .projection-controls {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  right: calc(16px + env(safe-area-inset-right));
   display: flex;
   gap: 10px;
   align-items: center;
@@ -539,7 +543,7 @@ main {
 .save-toast {
   position: fixed;
   left: 50%;
-  bottom: 90px;
+  bottom: calc(90px + env(safe-area-inset-bottom));
   transform: translateX(-50%) translateY(20px);
   background: rgba(20, 30, 50, 0.92);
   color: white;
