@@ -25,7 +25,9 @@ function fitStageToControls(stageEl) {
   if (!stage || !controlsEl) return;
   const controlsTop = controlsEl.getBoundingClientRect().top;
   if (controlsTop <= 0) return; // 投影モードが非表示のときは計測できない
-  const stageTop = stage.getBoundingClientRect().top;
+  // 座席表の上端は、ページのスクロール量に左右されないよう文書上の位置で求める
+  // (投影モードはスクロールしない=スクロール量0の状態の位置が、実際の表示位置になる)
+  const stageTop = stage.getBoundingClientRect().top + window.scrollY;
   const height = Math.max(STAGE_MIN_HEIGHT_PX, controlsTop - STAGE_BOTTOM_GAP_PX - stageTop);
   stage.style.height = `${height}px`;
 }

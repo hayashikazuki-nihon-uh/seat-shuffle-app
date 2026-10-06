@@ -64,6 +64,7 @@ function setupModeSwitch() {
   goProjectionBtn.addEventListener('click', () => {
     body.classList.remove('mode-admin');
     body.classList.add('mode-projection');
+    window.scrollTo(0, 0);
     setThemeColor('#0f1b30');
     refreshProjectionStage(stageEl);
   });
