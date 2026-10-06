@@ -8,6 +8,23 @@
   --color-danger: #d9534f;
   --color-text: #1f2d4a;
   --radius: 14px;
+  --safe-top: env(safe-area-inset-top);
+}
+
+/* ホーム画面アプリとして起動した場合、iPadでは env() がステータスバーの高さより小さい値を返すことがあるため、
+   最低限の余白(ステータスバー分+少し余裕)を確保する */
+html.standalone {
+  --safe-top: max(env(safe-area-inset-top), 36px);
+}
+
+/* ステータスバー部分に見える背景色を、表示中の画面(管理画面=白いヘッダー/投影=濃紺)に揃える */
+html:has(body.mode-admin) {
+  background: var(--color-card);
+}
+
+html:has(body.mode-projection),
+body.mode-projection {
+  background: #0f1b30;
 }
 
 * {
@@ -49,6 +66,7 @@ body.mode-admin #admin-view {
      高さを固定せずコンテンツに合わせて伸びるようにする */
   height: auto;
   min-height: 100%;
+  background: var(--color-bg);
 }
 
 body.mode-projection #projection-view {
@@ -61,7 +79,7 @@ body.mode-projection #projection-view {
   top: 0;
   z-index: 20;
   /* ステータスバー(時刻・電池表示)と重ならないよう、セーフエリア分だけ下げる */
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--safe-top);
   background: var(--color-card);
 }
 
@@ -464,7 +482,7 @@ main {
 #projection-view {
   background: #0f1b30;
   position: relative;
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--safe-top);
 }
 
 .seat-chart-stage {
@@ -473,7 +491,7 @@ main {
 }
 
 #projection-view .seat-chart-stage {
-  width: min(96vw, calc((96vh - env(safe-area-inset-top)) * 4 / 3));
+  width: min(96vw, calc((96vh - var(--safe-top)) * 4 / 3));
   margin: 3vh auto;
 }
 
@@ -484,7 +502,7 @@ main {
 
 .projection-error {
   position: absolute;
-  top: calc(16px + env(safe-area-inset-top));
+  top: calc(16px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   background: #fff3cd;

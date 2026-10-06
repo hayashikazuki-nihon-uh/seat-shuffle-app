@@ -1,4 +1,4 @@
-const CACHE_NAME = 'seat-shuffle-app-v14';
+const CACHE_NAME = 'seat-shuffle-app-v16';
 const ASSETS = [
   './',
   './index.html',
