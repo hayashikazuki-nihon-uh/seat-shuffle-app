@@ -509,11 +509,20 @@ main {
   aspect-ratio: 4 / 3;
 }
 
-/* 右下の操作ボタンと座席が重ならないよう、ボタンの高さ分(約64px+余白)を除いた範囲に座席表を収める */
+/* 座席表は画面の幅いっぱいに広げ、下側だけ右下の操作ボタンの帯の分を空ける。
+   (縦横比は固定せず、座席の位置は枠に対する割合で配置される) */
 #projection-view .seat-chart-stage {
-  --controls-reserve: calc(84px + env(safe-area-inset-bottom));
-  width: min(96vw, calc((100vh - var(--safe-top) - var(--controls-reserve) - 2vh) * 4 / 3));
+  --controls-reserve: calc(80px + env(safe-area-inset-bottom));
+  aspect-ratio: auto;
+  width: 96vw;
+  height: calc(100vh - var(--safe-top) - var(--controls-reserve) - 2vh);
   margin: 2vh auto 0;
+}
+
+@supports (height: 100dvh) {
+  #projection-view .seat-chart-stage {
+    height: calc(100dvh - var(--safe-top) - var(--controls-reserve) - 2vh);
+  }
 }
 
 #projection-view .desk {
