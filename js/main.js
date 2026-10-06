@@ -56,15 +56,22 @@ function setupModeSwitch() {
   const exitProjectionBtn = document.getElementById('exit-projection-btn');
   const stageEl = document.getElementById('projection-stage');
 
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  const setThemeColor = (color) => {
+    if (themeColorMeta) themeColorMeta.setAttribute('content', color);
+  };
+
   goProjectionBtn.addEventListener('click', () => {
     body.classList.remove('mode-admin');
     body.classList.add('mode-projection');
+    setThemeColor('#0f1b30');
     refreshProjectionStage(stageEl);
   });
 
   exitProjectionBtn.addEventListener('click', () => {
     body.classList.remove('mode-projection');
     body.classList.add('mode-admin');
+    setThemeColor('#ffffff');
     renderActiveTab();
     renderMismatchBanner();
   });

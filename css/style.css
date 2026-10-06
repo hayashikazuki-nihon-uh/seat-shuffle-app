@@ -17,6 +17,25 @@ html.standalone {
   --safe-top: max(env(safe-area-inset-top), 36px);
 }
 
+/* ステータスバーの下に、単色の帯を固定表示する。
+   iPadOS 26 ではステータスバー部分が背景をぼかして透過するため、
+   画面上部にある色付きのボタンなどが写り込まないよう、無地の帯で覆っておく */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-top);
+  background: var(--color-card);
+  z-index: 30;
+  pointer-events: none;
+}
+
+body.mode-projection::before {
+  background: #0f1b30;
+}
+
 /* ステータスバー部分に見える背景色を、表示中の画面(管理画面=白いヘッダー/投影=濃紺)に揃える */
 html:has(body.mode-admin) {
   background: var(--color-card);
@@ -490,9 +509,11 @@ main {
   aspect-ratio: 4 / 3;
 }
 
+/* 右下の操作ボタンと座席が重ならないよう、ボタンの高さ分(約64px+余白)を除いた範囲に座席表を収める */
 #projection-view .seat-chart-stage {
-  width: min(96vw, calc((96vh - var(--safe-top)) * 4 / 3));
-  margin: 3vh auto;
+  --controls-reserve: calc(84px + env(safe-area-inset-bottom));
+  width: min(96vw, calc((100vh - var(--safe-top) - var(--controls-reserve) - 2vh) * 4 / 3));
+  margin: 2vh auto 0;
 }
 
 #projection-view .desk {
