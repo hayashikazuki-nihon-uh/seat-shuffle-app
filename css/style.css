@@ -509,10 +509,10 @@ main {
   aspect-ratio: 4 / 3;
 }
 
-/* 座席表は画面の幅いっぱいに広げ、下側だけ右下の操作ボタンの帯の分を空ける。
-   (縦横比は固定せず、座席の位置は枠に対する割合で配置される) */
+/* 座席表は画面の幅いっぱいに広げ、高さは右下の操作ボタンの実際の位置に合わせて JS(projection.js)が計測して決める。
+   下の値は、計測が走るまでの仮の大きさ。(縦横比は固定せず、座席の位置は枠に対する割合で配置される) */
 #projection-view .seat-chart-stage {
-  --controls-reserve: calc(80px + env(safe-area-inset-bottom));
+  --controls-reserve: calc(64px + env(safe-area-inset-bottom));
   aspect-ratio: auto;
   width: 96vw;
   height: calc(100vh - var(--safe-top) - var(--controls-reserve) - 2vh);
@@ -545,8 +545,8 @@ main {
 
 .projection-controls {
   position: fixed;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  right: calc(8px + env(safe-area-inset-right));
   display: flex;
   gap: 10px;
   align-items: center;

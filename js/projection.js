@@ -11,12 +11,39 @@ let currentSeatsSnapshot = null;
 let isAnimating = false;
 let viewMode = 'podium'; // 'podium' = 元のレイアウト通り, 'student' = 180度回転(生徒から見た向き)
 let flipBtnEl = null;
+let controlsEl = null;
+
+const STAGE_BOTTOM_GAP_PX = 8;
+const STAGE_MIN_HEIGHT_PX = 120;
+
+/**
+ * 右下の操作ボタンの実際の位置を計測し、座席表がその上端までに収まるよう高さを決める。
+ * (ボタンの大きさや画面の向き・サイズが変わっても、重ならないように追従する)
+ */
+function fitStageToControls(stageEl) {
+  const stage = stageEl.querySelector('.seat-chart-stage');
+  if (!stage || !controlsEl) return;
+  const controlsTop = controlsEl.getBoundingClientRect().top;
+  if (controlsTop <= 0) return; // 投影モードが非表示のときは計測できない
+  const stageTop = stage.getBoundingClientRect().top;
+  const height = Math.max(STAGE_MIN_HEIGHT_PX, controlsTop - STAGE_BOTTOM_GAP_PX - stageTop);
+  stage.style.height = `${height}px`;
+}
 
 export function initProjection({ stageEl, shuffleBtn, saveImageBtn, flipBtn, errorEl }) {
   flipBtnEl = flipBtn;
+  controlsEl = document.getElementById('projection-controls');
   updateFlipButtonLabel();
   renderStage(stageEl);
   saveImageBtn.disabled = true;
+
+  // ボタンの大きさが変わった時・画面サイズや向きが変わった時・投影モードが表示された時に、座席表の大きさを再計測する
+  const refit = () => fitStageToControls(stageEl);
+  window.addEventListener('resize', refit);
+  window.addEventListener('orientationchange', refit);
+  if (typeof ResizeObserver !== 'undefined' && controlsEl) {
+    new ResizeObserver(refit).observe(controlsEl);
+  }
 
   shuffleBtn.addEventListener('click', () => {
     if (isAnimating) return;
@@ -107,7 +134,7 @@ function renderStage(stageEl, desksOverride, { forceBlank = false } = {}) {
 
   const { wPct, hPct } = getDeskSizePct(desks.length);
 
-  return desks.map((desk) => {
+  const reels = desks.map((desk) => {
     const el = document.createElement('div');
     el.className = 'desk desk-display';
     el.style.left = `${rotate180 ? 100 - desk.xPct - wPct : desk.xPct}%`;
@@ -118,6 +145,9 @@ function renderStage(stageEl, desksOverride, { forceBlank = false } = {}) {
     stage.appendChild(el);
     return { desk, el };
   });
+
+  fitStageToControls(stageEl);
+  return reels;
 }
 
 function showError(errorEl, message) {
