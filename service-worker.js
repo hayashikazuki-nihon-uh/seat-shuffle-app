@@ -1,4 +1,4 @@
-const CACHE_NAME = 'seat-shuffle-app-v19';
+const CACHE_NAME = 'seat-shuffle-app-v20';
 const ASSETS = [
   './',
   './index.html',
@@ -26,7 +26,12 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      // cache: 'reload' でブラウザのHTTPキャッシュを使わず、必ず最新のファイルを取得して保存する。
+      // (GitHub Pages は最大10分キャッシュさせるため、指定しないと古いファイルを新バージョンとして保存してしまう)
+      .then((cache) => Promise.all(ASSETS.map((url) => cache.add(new Request(url, { cache: 'reload' })))))
+      .then(() => self.skipWaiting())
   );
 });
 
