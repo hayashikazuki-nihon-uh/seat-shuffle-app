@@ -134,11 +134,19 @@ function renderStage(stageEl, desksOverride, { forceBlank = false } = {}) {
 
   const { wPct, hPct } = getDeskSizePct(desks.length);
 
+  // 最上段の席が枠の上端、最下段の席が枠の下端にぴったり来るよう、縦位置を計算し直す
+  // (レイアウト作成時に入っている上下の余白を、投影モードでは詰める)
+  const topMost = Math.min(...desks.map((d) => d.yPct));
+  const bottomMost = Math.max(...desks.map((d) => d.yPct));
+  const rowSpan = bottomMost - topMost;
+  const fitY = (yPct) => (rowSpan > 0 ? ((yPct - topMost) / rowSpan) * (100 - hPct) : 0);
+
   const reels = desks.map((desk) => {
     const el = document.createElement('div');
     el.className = 'desk desk-display';
+    const y = fitY(desk.yPct);
     el.style.left = `${rotate180 ? 100 - desk.xPct - wPct : desk.xPct}%`;
-    el.style.top = `${rotate180 ? 100 - desk.yPct - hPct : desk.yPct}%`;
+    el.style.top = `${rotate180 ? 100 - y - hPct : y}%`;
     el.style.width = `${wPct}%`;
     el.style.height = `${hPct}%`;
     el.textContent = nameById ? nameById.get(currentAssignment[desk.id]) || '' : '';

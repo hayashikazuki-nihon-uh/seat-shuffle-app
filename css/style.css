@@ -515,13 +515,13 @@ main {
   --controls-reserve: calc(64px + env(safe-area-inset-bottom));
   aspect-ratio: auto;
   width: 96vw;
-  height: calc(100vh - var(--safe-top) - var(--controls-reserve) - 2vh);
-  margin: 2vh auto 0;
+  height: calc(100vh - var(--safe-top) - var(--controls-reserve));
+  margin: 0 auto;
 }
 
 @supports (height: 100dvh) {
   #projection-view .seat-chart-stage {
-    height: calc(100dvh - var(--safe-top) - var(--controls-reserve) - 2vh);
+    height: calc(100dvh - var(--safe-top) - var(--controls-reserve));
   }
 }
 
