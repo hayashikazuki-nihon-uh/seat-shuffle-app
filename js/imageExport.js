@@ -4,6 +4,7 @@ const CANVAS_W = 1600;
 const CANVAS_H = 1200;
 const DESK_W = 150;
 const DESK_H = 110;
+const MARGIN = 90; // 席全体と画像の端との余白(上下左右とも同じ)
 
 function fitFontSize(ctx, text, maxWidth, startSize) {
   let size = startSize;
@@ -37,14 +38,20 @@ function drawSeatChart(seats, title, rotate180, showFrontZone) {
   ctx.textBaseline = 'top';
   ctx.fillText(title, 40, 30);
 
-  const areaTop = 110;
-  const areaHeight = CANVAS_H - areaTop - 30;
+  // 席全体の外枠を測り、画像の上下左右に同じ余白(MARGIN)で収まるように位置を計算し直す。
+  // (保存されている位置は、レイアウト作成時の余白の偏りを含むため、そのまま使うと片側に寄る)
+  const sourceXs = seats.map((s) => (rotate180 ? 100 - s.xPct : s.xPct));
+  const sourceYs = seats.map((s) => (rotate180 ? 100 - s.yPct : s.yPct));
+  const minX = Math.min(...sourceXs);
+  const maxX = Math.max(...sourceXs);
+  const minY = Math.min(...sourceYs);
+  const maxY = Math.max(...sourceYs);
+  const fitAxis = (value, min, max, rangeStart, rangeEnd) =>
+    max > min ? rangeStart + ((value - min) / (max - min)) * (rangeEnd - rangeStart) : (rangeStart + rangeEnd) / 2;
 
-  for (const seat of seats) {
-    const effectiveXPct = rotate180 ? 100 - seat.xPct : seat.xPct;
-    const effectiveYPct = rotate180 ? 100 - seat.yPct : seat.yPct;
-    const cx = (effectiveXPct / 100) * CANVAS_W;
-    const cy = areaTop + (effectiveYPct / 100) * areaHeight;
+  for (const [index, seat] of seats.entries()) {
+    const cx = fitAxis(sourceXs[index], minX, maxX, MARGIN + DESK_W / 2, CANVAS_W - MARGIN - DESK_W / 2);
+    const cy = fitAxis(sourceYs[index], minY, maxY, MARGIN + DESK_H / 2, CANVAS_H - MARGIN - DESK_H / 2);
     const x = cx - DESK_W / 2;
     const y = cy - DESK_H / 2;
     const radius = 16;
